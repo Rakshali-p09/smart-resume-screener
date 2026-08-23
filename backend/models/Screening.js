@@ -39,6 +39,31 @@ const screeningSchema = new mongoose.Schema(
       required: true
     },
 
+    experienceAnalysis: {
+      type: String,
+      default: ""
+    },
+
+    educationAnalysis: {
+      type: String,
+      default: ""
+    },
+
+    strengths: {
+      type: [String],
+      default: []
+    },
+
+    concerns: {
+      type: [String],
+      default: []
+    },
+
+    justification: {
+      type: String,
+      default: ""
+    },
+
     recommendation: {
       type: String,
       required: true
