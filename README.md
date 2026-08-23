@@ -1,122 +1,106 @@
 # Smart Resume Screener
 
-An AI-powered resume screening web application that helps analyze resumes against job requirements, identify matching and missing skills, and generate a candidate match score.
+An AI-powered resume screening web application that analyzes candidate resumes against job requirements, identifies matching and missing skills, calculates a compatibility score, and provides an AI-generated screening recommendation.
 
-## 🚀 Project Overview
+---
 
-Smart Resume Screener is a full-stack web application developed as an internship project.
+## 📌 Project Overview
 
-The system allows users to:
+Smart Resume Screener is designed to help recruiters evaluate candidates more efficiently.
 
-- Create and manage job requirements
-- Upload candidate resumes
-- Extract text from PDF resumes
-- Detect technical skills from resumes
-- Compare resume skills with job requirements
-- Calculate a resume-job match score
+The application allows a recruiter to:
+
+- Upload a candidate resume in PDF format
+- Extract text and technical skills from the resume
+- Create job positions with required skills and experience
+- Compare a candidate resume with a selected job
+- Use Gemini AI for semantic resume-job matching
+- Generate a match score
 - Identify matched and missing skills
-- Generate a screening recommendation
-- View detailed screening results
+- Analyze candidate experience and education
+- Generate strengths, concerns, justification, and recommendation
+- Store screening results in MongoDB
+- View candidate screening results through a web dashboard
 
-## ✨ Features
+---
 
-### 🔐 Authentication
+## 🎯 Objective
+
+The main objective of the project is to intelligently parse resumes and compare candidate profiles with job requirements.
+
+The system combines:
+
+- Resume text extraction
+- Skill extraction
+- Skill normalization
+- Database storage
+- AI-based semantic matching
+- Candidate screening visualization
+
+This helps recruiters make faster and more consistent screening decisions.
+
+---
+
+## ✨ Key Features
+
+### 1. User Authentication
+
 - User registration
 - User login
+- Password hashing using bcrypt
 - JWT-based authentication
-- Protected application routes
+- Protected backend APIs
 
-### 💼 Job Management
-- Create new job positions
-- Store job descriptions
-- Define required skills
-- Specify experience requirements
-- View and search available jobs
+### 2. Resume Upload
 
-### 📄 Resume Management
-- Upload resumes in PDF format
-- Extract resume text
-- Detect technical skills
-- Store resume information in MongoDB
+Recruiters can upload candidate resumes in PDF format.
 
-### 🎯 Resume Screening
-- Select a resume
-- Select a job
-- Compare required skills with detected resume skills
-- Identify matched skills
-- Identify missing skills
-- Calculate match percentage
-- Generate screening recommendations
+The system:
 
-### 📊 Candidate Analysis
-- View candidate screening results
-- Match score visualization
-- Matched skill analysis
-- Missing skill analysis
-- Resume information
-- Extracted resume content
+1. Receives the PDF
+2. Extracts text using `pdf-parse`
+3. Extracts technical skills
+4. Stores the resume information in MongoDB
 
-## 🛠️ Technology Stack
+### 3. Skill Extraction
 
-### Frontend
+The application automatically identifies technical skills from the extracted resume text.
 
-- React.js
-- React Router
+Supported examples include:
+
+- Java
+- Python
+- C
+- C++
 - JavaScript
+- TypeScript
 - HTML
 - CSS
-- Vite
-
-### Backend
-
+- React
 - Node.js
-- Express.js
+- Express
 - MongoDB
-- Mongoose
-- JWT Authentication
-- Multer
-- PDF parsing
-
-### Development Tools
-
-- VS Code
+- MySQL
+- SQL
 - Git
 - GitHub
-- MongoDB Compass
+- Spring Boot
+- REST API
+- Docker
+- AWS
+- Azure
+- Machine Learning
+- Data Structures
+- Algorithms
 
-## 🏗️ Project Structure
+### 4. Skill Normalization
+
+The system handles common variations of the same technology.
+
+Examples:
 
 ```text
-smart-resume-screener/
-│
-├── backend/
-│   ├── middleware/
-│   │   └── authMiddleware.js
-│   │
-│   ├── models/
-│   │   ├── Job.js
-│   │   ├── Resume.js
-│   │   ├── Screening.js
-│   │   └── User.js
-│   │
-│   ├── utils/
-│   │   └── skillExtractor.js
-│   │
-│   ├── server.js
-│   ├── package.json
-│   └── package-lock.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── assets/
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   └── main.jsx
-│   │
-│   ├── package.json
-│   └── vite.config.js
-│
-├── .gitignore
-└── README.md
+Spring Boot
+SpringBoot
+spring-boot
+spring boot
