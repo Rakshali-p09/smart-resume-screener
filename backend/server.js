@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -6,26 +8,51 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// Models
+const { GoogleGenAI } = require("@google/genai");
+
+// =====================================================
+// MODELS
+// =====================================================
+
 const User = require("./models/User");
 const Resume = require("./models/Resume");
 const Job = require("./models/Job");
 const Screening = require("./models/Screening");
 
-// Middleware
+// =====================================================
+// MIDDLEWARE
+// =====================================================
+
 const authMiddleware = require("./middleware/authMiddleware");
 
-// Utilities
+// =====================================================
+// UTILITIES
+// =====================================================
+
 const extractSkills = require("./utils/skillExtractor");
+
+// =====================================================
+// APP
+// =====================================================
 
 const app = express();
 
 
 // =====================================================
-// MIDDLEWARE
+// GEMINI CONFIGURATION
+// =====================================================
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
+
+
+// =====================================================
+// BASIC MIDDLEWARE
 // =====================================================
 
 app.use(cors());
+
 app.use(express.json());
 
 
@@ -35,12 +62,23 @@ app.use(express.json());
 
 mongoose
   .connect("mongodb://localhost:27017/smartResumeDB")
+
   .then(() => {
-    console.log("MongoDB connected successfully");
+
+    console.log(
+      "MongoDB connected successfully"
+    );
+
   })
+
   .catch((error) => {
-    console.error("MongoDB connection error:");
+
+    console.error(
+      "MongoDB connection error:"
+    );
+
     console.error(error);
+
   });
 
 
@@ -49,17 +87,34 @@ mongoose
 // =====================================================
 
 const upload = multer({
-  storage: multer.memoryStorage(),
 
-  fileFilter: (req, file, cb) => {
+  storage:
+    multer.memoryStorage(),
 
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed"));
+  fileFilter:
+    (req, file, cb) => {
+
+      if (
+        file.mimetype ===
+        "application/pdf"
+      ) {
+
+        cb(null, true);
+
+      }
+
+      else {
+
+        cb(
+          new Error(
+            "Only PDF files are allowed"
+          )
+        );
+
+      }
+
     }
 
-  }
 });
 
 
@@ -67,302 +122,336 @@ const upload = multer({
 // TEST ROUTE
 // =====================================================
 
-app.get("/", (req, res) => {
+app.get(
+  "/",
+  (req, res) => {
 
-  res.send(
-    "Smart Resume Screener Backend is Running"
-  );
-
-});
-
-
-// =====================================================
-// REGISTER USER
-// =====================================================
-
-app.post("/api/auth/register", async (req, res) => {
-
-  try {
-
-    const {
-      name,
-      email,
-      password
-    } = req.body;
-
-
-    console.log("-----------------------------------");
-    console.log("Registration request received");
-
-
-    // Validation
-
-    if (!name || !email || !password) {
-
-      return res.status(400).json({
-        message:
-          "Name, email and password are required"
-      });
-
-    }
-
-
-    if (password.length < 6) {
-
-      return res.status(400).json({
-        message:
-          "Password must be at least 6 characters"
-      });
-
-    }
-
-
-    // Check existing user
-
-    const existingUser =
-      await User.findOne({
-        email: email.toLowerCase()
-      });
-
-
-    if (existingUser) {
-
-      return res.status(400).json({
-        message:
-          "User with this email already exists"
-      });
-
-    }
-
-
-    // Hash password
-
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
-
-
-    // Create user
-
-    const newUser = new User({
-
-      name: name,
-
-      email: email.toLowerCase(),
-
-      password: hashedPassword
-
-    });
-
-
-    // Save user
-
-    const savedUser =
-      await newUser.save();
-
-
-    console.log(
-      "User registered successfully!"
+    res.send(
+      "Smart Resume Screener Backend is Running"
     );
-
-    console.log(
-      "User ID:",
-      savedUser._id
-    );
-
-
-    res.status(201).json({
-
-      message:
-        "Registration successful",
-
-      user: {
-
-        id: savedUser._id,
-
-        name: savedUser.name,
-
-        email: savedUser.email
-
-      }
-
-    });
 
   }
-
-  catch (error) {
-
-    console.error(
-      "Registration error:"
-    );
-
-    console.error(error);
-
-
-    res.status(500).json({
-
-      message:
-        "Error during registration",
-
-      error:
-        error.message
-
-    });
-
-  }
-
-});
+);
 
 
 // =====================================================
-// LOGIN USER
+// REGISTER
 // =====================================================
 
-app.post("/api/auth/login", async (req, res) => {
+app.post(
+  "/api/auth/register",
 
-  try {
+  async (req, res) => {
 
-    const {
-      email,
-      password
-    } = req.body;
+    try {
 
-
-    console.log("-----------------------------------");
-    console.log("Login request received");
-
-
-    // Validation
-
-    if (!email || !password) {
-
-      return res.status(400).json({
-
-        message:
-          "Email and password are required"
-
-      });
-
-    }
+      const {
+        name,
+        email,
+        password
+      } = req.body;
 
 
-    // Find user
+      console.log(
+        "-----------------------------------"
+      );
 
-    const user =
-      await User.findOne({
-
-        email:
-          email.toLowerCase()
-
-      });
-
-
-    if (!user) {
-
-      return res.status(401).json({
-
-        message:
-          "Invalid email or password"
-
-      });
-
-    }
-
-
-    // Check password
-
-    const passwordMatch =
-      await bcrypt.compare(
-        password,
-        user.password
+      console.log(
+        "Registration request received"
       );
 
 
-    if (!passwordMatch) {
+      if (
+        !name ||
+        !email ||
+        !password
+      ) {
 
-      return res.status(401).json({
+        return res.status(400).json({
+
+          message:
+            "Name, email and password are required"
+
+        });
+
+      }
+
+
+      if (
+        password.length < 6
+      ) {
+
+        return res.status(400).json({
+
+          message:
+            "Password must be at least 6 characters"
+
+        });
+
+      }
+
+
+      const existingUser =
+        await User.findOne({
+
+          email:
+            email.toLowerCase()
+
+        });
+
+
+      if (existingUser) {
+
+        return res.status(400).json({
+
+          message:
+            "User with this email already exists"
+
+        });
+
+      }
+
+
+      const hashedPassword =
+        await bcrypt.hash(
+          password,
+          10
+        );
+
+
+      const newUser =
+        new User({
+
+          name:
+            name,
+
+          email:
+            email.toLowerCase(),
+
+          password:
+            hashedPassword
+
+        });
+
+
+      const savedUser =
+        await newUser.save();
+
+
+      console.log(
+        "User registered successfully!"
+      );
+
+
+      res.status(201).json({
 
         message:
-          "Invalid email or password"
+          "Registration successful",
 
-      });
+        user: {
 
-    }
+          id:
+            savedUser._id,
 
+          name:
+            savedUser.name,
 
-    // Create JWT
+          email:
+            savedUser.email
 
-    const token =
-      jwt.sign(
-
-        {
-          userId: user._id,
-          email: user.email
-        },
-
-        "smart_resume_secret_key",
-
-        {
-          expiresIn: "1d"
         }
 
+      });
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "Registration error:"
+      );
+
+      console.error(error);
+
+
+      res.status(500).json({
+
+        message:
+          "Error during registration",
+
+        error:
+          error.message
+
+      });
+
+    }
+
+  }
+);
+
+
+// =====================================================
+// LOGIN
+// =====================================================
+
+app.post(
+  "/api/auth/login",
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        email,
+        password
+      } = req.body;
+
+
+      console.log(
+        "-----------------------------------"
+      );
+
+      console.log(
+        "Login request received"
       );
 
 
-    console.log(
-      "Login successful!"
-    );
+      if (
+        !email ||
+        !password
+      ) {
 
-    console.log(
-      "User:",
-      user.email
-    );
+        return res.status(400).json({
 
+          message:
+            "Email and password are required"
 
-    res.status(200).json({
-
-      message:
-        "Login successful",
-
-      token:
-
-        token,
-
-      user: {
-
-        id: user._id,
-
-        name: user.name,
-
-        email: user.email
+        });
 
       }
 
-    });
+
+      const user =
+        await User.findOne({
+
+          email:
+            email.toLowerCase()
+
+        });
+
+
+      if (!user) {
+
+        return res.status(401).json({
+
+          message:
+            "Invalid email or password"
+
+        });
+
+      }
+
+
+      const passwordMatch =
+        await bcrypt.compare(
+
+          password,
+
+          user.password
+
+        );
+
+
+      if (!passwordMatch) {
+
+        return res.status(401).json({
+
+          message:
+            "Invalid email or password"
+
+        });
+
+      }
+
+
+      const token =
+        jwt.sign(
+
+          {
+
+            userId:
+              user._id,
+
+            email:
+              user.email
+
+          },
+
+          "smart_resume_secret_key",
+
+          {
+
+            expiresIn:
+              "1d"
+
+          }
+
+        );
+
+
+      console.log(
+        "Login successful!"
+      );
+
+
+      res.status(200).json({
+
+        message:
+          "Login successful",
+
+        token:
+          token,
+
+        user: {
+
+          id:
+            user._id,
+
+          name:
+            user.name,
+
+          email:
+            user.email
+
+        }
+
+      });
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "Login error:"
+      );
+
+      console.error(error);
+
+
+      res.status(500).json({
+
+        message:
+          "Error during login",
+
+        error:
+          error.message
+
+      });
+
+    }
 
   }
-
-  catch (error) {
-
-    console.error(
-      "Login error:"
-    );
-
-    console.error(error);
-
-
-    res.status(500).json({
-
-      message:
-        "Error during login",
-
-      error:
-        error.message
-
-    });
-
-  }
-
-});
+);
 
 
 // =====================================================
@@ -370,8 +459,11 @@ app.post("/api/auth/login", async (req, res) => {
 // =====================================================
 
 app.post(
+
   "/api/resumes/upload",
+
   authMiddleware,
+
   upload.single("resume"),
 
   async (req, res) => {
@@ -390,25 +482,21 @@ app.post(
       }
 
 
-      console.log("-----------------------------------");
+      console.log(
+        "-----------------------------------"
+      );
 
       console.log(
         "Authenticated user:",
         req.user.userId
       );
 
-      console.log(
-        "File received:"
-      );
 
       console.log(
+        "File received:",
         req.file.originalname
       );
 
-
-      // -----------------------------------------
-      // Extract PDF text
-      // -----------------------------------------
 
       console.log(
         "Extracting resume text..."
@@ -430,10 +518,6 @@ app.post(
       );
 
 
-      // -----------------------------------------
-      // Extract skills
-      // -----------------------------------------
-
       const skills =
         extractSkills(
           extractedText
@@ -441,15 +525,10 @@ app.post(
 
 
       console.log(
-        "Extracted skills:"
+        "Extracted skills:",
+        skills
       );
 
-      console.log(skills);
-
-
-      // -----------------------------------------
-      // Create Resume
-      // -----------------------------------------
 
       const newResume =
         new Resume({
@@ -472,27 +551,12 @@ app.post(
         });
 
 
-      // -----------------------------------------
-      // Save Resume
-      // -----------------------------------------
-
-      console.log(
-        "Saving resume to MongoDB..."
-      );
-
-
       const savedResume =
         await newResume.save();
 
 
       console.log(
         "Resume saved successfully!"
-      );
-
-
-      console.log(
-        "Resume ID:",
-        savedResume._id
       );
 
 
@@ -539,15 +603,18 @@ app.post(
     }
 
   }
+
 );
 
 
 // =====================================================
-// GET USER'S RESUMES
+// GET RESUMES
 // =====================================================
 
 app.get(
+
   "/api/resumes",
+
   authMiddleware,
 
   async (req, res) => {
@@ -561,8 +628,12 @@ app.get(
             req.user.userId
 
         })
+
         .sort({
-          createdAt: -1
+
+          createdAt:
+            -1
+
         });
 
 
@@ -594,6 +665,7 @@ app.get(
     }
 
   }
+
 );
 
 
@@ -602,7 +674,9 @@ app.get(
 // =====================================================
 
 app.post(
+
   "/api/jobs",
+
   authMiddleware,
 
   async (req, res) => {
@@ -617,25 +691,20 @@ app.post(
       } = req.body;
 
 
-      console.log("-----------------------------------");
-
       console.log(
-        "Authenticated user:",
-        req.user.userId
+        "-----------------------------------"
       );
 
       console.log(
-        "Job data received:"
+        "Job data received:",
+        req.body
       );
 
-      console.log(req.body);
 
-
-      // -----------------------------------------
-      // Validation
-      // -----------------------------------------
-
-      if (!title || !description) {
+      if (
+        !title ||
+        !description
+      ) {
 
         return res.status(400).json({
 
@@ -659,35 +728,45 @@ app.post(
       }
 
 
-      // -----------------------------------------
-      // Convert skills string to array
-      // -----------------------------------------
+      let skillsArray;
 
-      const skillsArray =
-        requiredSkills
-          .split(",")
-          .map(
-            (skill) =>
-              skill.trim()
+
+      if (
+        Array.isArray(
+          requiredSkills
+        )
+      ) {
+
+        skillsArray =
+          requiredSkills
+
+            .map(
+              (skill) =>
+                String(skill).trim()
+            )
+
+            .filter(Boolean);
+
+      }
+
+      else {
+
+        skillsArray =
+          String(
+            requiredSkills
           )
-          .filter(
-            (skill) =>
-              skill !== ""
-          );
 
+            .split(",")
 
-      console.log(
-        "Required skills:"
-      );
+            .map(
+              (skill) =>
+                skill.trim()
+            )
 
-      console.log(
-        skillsArray
-      );
+            .filter(Boolean);
 
+      }
 
-      // -----------------------------------------
-      // Create Job
-      // -----------------------------------------
 
       const newJob =
         new Job({
@@ -710,27 +789,12 @@ app.post(
         });
 
 
-      // -----------------------------------------
-      // Save Job
-      // -----------------------------------------
-
-      console.log(
-        "Saving job to MongoDB..."
-      );
-
-
       const savedJob =
         await newJob.save();
 
 
       console.log(
         "Job saved successfully!"
-      );
-
-
-      console.log(
-        "Job ID:",
-        savedJob._id
       );
 
 
@@ -768,15 +832,18 @@ app.post(
     }
 
   }
+
 );
 
 
 // =====================================================
-// GET USER'S JOBS
+// GET JOBS
 // =====================================================
 
 app.get(
+
   "/api/jobs",
+
   authMiddleware,
 
   async (req, res) => {
@@ -790,8 +857,12 @@ app.get(
             req.user.userId
 
         })
+
         .sort({
-          createdAt: -1
+
+          createdAt:
+            -1
+
         });
 
 
@@ -823,15 +894,18 @@ app.get(
     }
 
   }
+
 );
 
 
 // =====================================================
-// MATCH RESUME WITH JOB
+// AI RESUME SCREENING
 // =====================================================
 
 app.post(
+
   "/api/match",
+
   authMiddleware,
 
   async (req, res) => {
@@ -844,31 +918,55 @@ app.post(
       } = req.body;
 
 
-      console.log("-----------------------------------");
-
       console.log(
-        "MATCHING REQUEST"
+        "-----------------------------------"
       );
 
       console.log(
-        "User ID:",
-        req.user.userId
-      );
-
-      console.log(
-        "Resume ID:",
-        resumeId
-      );
-
-      console.log(
-        "Job ID:",
-        jobId
+        "AI RESUME SCREENING REQUEST"
       );
 
 
-      // -----------------------------------------
-      // Find resume belonging to user
-      // -----------------------------------------
+      // =========================================
+      // VALIDATE REQUEST
+      // =========================================
+
+      if (
+        !resumeId ||
+        !jobId
+      ) {
+
+        return res.status(400).json({
+
+          message:
+            "Resume ID and Job ID are required"
+
+        });
+
+      }
+
+
+      // =========================================
+      // CHECK GEMINI KEY
+      // =========================================
+
+      if (
+        !process.env.GEMINI_API_KEY
+      ) {
+
+        return res.status(500).json({
+
+          message:
+            "Gemini API key is not configured"
+
+        });
+
+      }
+
+
+      // =========================================
+      // FIND RESUME
+      // =========================================
 
       const resume =
         await Resume.findOne({
@@ -894,9 +992,9 @@ app.post(
       }
 
 
-      // -----------------------------------------
-      // Find job belonging to user
-      // -----------------------------------------
+      // =========================================
+      // FIND JOB
+      // =========================================
 
       const job =
         await Job.findOne({
@@ -922,190 +1020,469 @@ app.post(
       }
 
 
-      // -----------------------------------------
-      // Normalize skills
-      // -----------------------------------------
-
-      const normalizeSkill = (skill) => {
-
-  if (!skill) {
-    return "";
-  }
-
-  const value = skill
-    .toLowerCase()
-    .trim()
-    .replace(/[\s._-]/g, "");
-
-  const aliases = {
-
-    "jav": "java",
-    "java": "java",
-    "javase": "java",
-    "corejava": "java",
-
-    "spring": "spring",
-    "springboot": "springboot",
-    "springframework": "spring",
-
-    "react": "react",
-    "reactjs": "react",
-
-    "node": "nodejs",
-    "nodejs": "nodejs",
-
-    "javascript": "javascript",
-    "js": "javascript",
-
-    "typescript": "typescript",
-    "ts": "typescript",
-
-    "html": "html",
-    "html5": "html",
-
-    "css": "css",
-    "css3": "css",
-
-    "mongodb": "mongodb",
-    "mongo": "mongodb",
-    "mongodb": "mongodb",
-
-    "git": "git",
-    "github": "github",
-
-    "sql": "sql",
-
-    "rest": "restapi",
-    "restapi": "restapi",
-    "restfulapi": "restapi"
-  };
-
-  return aliases[value] || value;
-};
-      // -----------------------------------------
-      // Resume skills
-      // -----------------------------------------
-      const resumeSkills = [
-  ...new Set(
-    resume.skills
-      .map(normalizeSkill)
-      .filter(Boolean)
-  )
-];
-
-const jobSkills = [
-  ...new Set(
-    job.requiredSkills
-      .map(normalizeSkill)
-      .filter(Boolean)
-  )
-];
+      console.log(
+        "Resume:",
+        resume.originalName
+      );
 
 
-const matchedSkills = jobSkills.filter(
-  (jobSkill) =>
-    resumeSkills.includes(jobSkill)
-);
+      console.log(
+        "Job:",
+        job.title
+      );
 
 
-const missingSkills = jobSkills.filter(
-  (jobSkill) =>
-    !resumeSkills.includes(jobSkill)
-);
+      // =========================================
+      // PREPARE DATA
+      // =========================================
 
-      // -----------------------------------------
-      // Match score
-      // -----------------------------------------
-
-      let matchScore = 0;
+      const resumeText =
+        resume.extractedText || "";
 
 
-      if (jobSkills.length > 0) {
+      const resumeSkills =
+        Array.isArray(
+          resume.skills
+        )
+          ? resume.skills
+          : [];
 
-        matchScore =
-          (
-            matchedSkills.length /
-            jobSkills.length
-          ) * 100;
+
+      const jobDescription =
+        job.description || "";
+
+
+      const jobSkills =
+        Array.isArray(
+          job.requiredSkills
+        )
+          ? job.requiredSkills
+          : [];
+
+
+      const jobExperience =
+        job.experience || "";
+
+
+      // =========================================
+      // GEMINI PROMPT
+      // =========================================
+
+      const prompt = `
+
+You are an expert technical recruiter and resume screening assistant.
+
+Compare the candidate resume with the job description.
+
+Your analysis must be based ONLY on the information provided.
+
+Do not invent information.
+
+Evaluate:
+
+1. Technical skills
+2. Relevant experience
+3. Education
+4. Projects and responsibilities
+5. Overall suitability
+
+SKILL NORMALIZATION:
+
+Treat common formatting variations as the same skill.
+
+Examples:
+
+Spring Boot = SpringBoot = spring-boot = spring boot
+
+Node.js = NodeJS = Node JS
+
+React = React.js = ReactJS
+
+JavaScript = JS
+
+MongoDB = Mongo DB = Mongo
+
+C++ = CPP
+
+Do not consider a skill matched merely because it is conceptually related.
+
+A skill should be matched when the resume provides evidence of that skill.
+
+Missing skills must come from the job requirements.
+
+MATCH SCORE:
+
+0-20 = Very Poor Match
+21-40 = Poor Match
+41-60 = Partial Match
+61-80 = Good Match
+81-100 = Excellent Match
+
+The recommendation must be one of:
+
+"Strong Match"
+"Good Match"
+"Review"
+"Low Match"
+
+JOB TITLE:
+
+${job.title}
+
+JOB DESCRIPTION:
+
+${jobDescription}
+
+REQUIRED SKILLS:
+
+${jobSkills.join(", ")}
+
+REQUIRED EXPERIENCE:
+
+${jobExperience}
+
+EXTRACTED RESUME SKILLS:
+
+${resumeSkills.join(", ")}
+
+FULL RESUME TEXT:
+
+${resumeText}
+
+Return ONLY the requested JSON object.
+
+`;
+
+
+      // =========================================
+      // CALL GEMINI
+      // =========================================
+
+      console.log(
+        "Sending resume and job data to Gemini..."
+      );
+
+
+      const response =
+        await ai.models.generateContent({
+
+          model:
+            "gemini-3.6-flash",
+
+          contents:
+            prompt,
+
+          config: {
+
+            responseMimeType:
+              "application/json",
+
+            responseSchema: {
+
+              type:
+                "object",
+
+              properties: {
+
+                matchScore: {
+
+                  type:
+                    "number"
+
+                },
+
+                matchedSkills: {
+
+                  type:
+                    "array",
+
+                  items: {
+
+                    type:
+                      "string"
+
+                  }
+
+                },
+
+                missingSkills: {
+
+                  type:
+                    "array",
+
+                  items: {
+
+                    type:
+                      "string"
+
+                  }
+
+                },
+
+                experienceAnalysis: {
+
+                  type:
+                    "string"
+
+                },
+
+                educationAnalysis: {
+
+                  type:
+                    "string"
+
+                },
+
+                strengths: {
+
+                  type:
+                    "array",
+
+                  items: {
+
+                    type:
+                      "string"
+
+                  }
+
+                },
+
+                concerns: {
+
+                  type:
+                    "array",
+
+                  items: {
+
+                    type:
+                      "string"
+
+                  }
+
+                },
+
+                justification: {
+
+                  type:
+                    "string"
+
+                },
+
+                recommendation: {
+
+                  type:
+                    "string"
+
+                }
+
+              },
+
+              required: [
+
+                "matchScore",
+
+                "matchedSkills",
+
+                "missingSkills",
+
+                "experienceAnalysis",
+
+                "educationAnalysis",
+
+                "strengths",
+
+                "concerns",
+
+                "justification",
+
+                "recommendation"
+
+              ]
+
+            }
+
+          }
+
+        });
+
+
+      console.log(
+        "Gemini response received."
+      );
+
+
+      // =========================================
+      // PARSE GEMINI RESULT
+      // =========================================
+
+      const aiResult =
+        JSON.parse(
+          response.text
+        );
+
+
+      // =========================================
+      // VALIDATE SCORE
+      // =========================================
+
+      let matchScore =
+        Number(
+          aiResult.matchScore
+        );
+
+
+      if (
+        Number.isNaN(
+          matchScore
+        )
+      ) {
+
+        matchScore = 0;
 
       }
 
 
       matchScore =
-        Math.round(
-          matchScore
+        Math.max(
+
+          0,
+
+          Math.min(
+
+            100,
+
+            Math.round(
+              matchScore
+            )
+
+          )
+
         );
 
 
-      // -----------------------------------------
-      // Recommendation
-      // -----------------------------------------
+      // =========================================
+      // SAFE ARRAYS
+      // =========================================
 
-      let recommendation;
+      const matchedSkills =
+        Array.isArray(
+          aiResult.matchedSkills
+        )
+          ? aiResult.matchedSkills
+          : [];
 
 
-      if (matchScore >= 80) {
+      const missingSkills =
+        Array.isArray(
+          aiResult.missingSkills
+        )
+          ? aiResult.missingSkills
+          : [];
 
-        recommendation =
-          "Shortlist";
+
+      const strengths =
+        Array.isArray(
+          aiResult.strengths
+        )
+          ? aiResult.strengths
+          : [];
+
+
+      const concerns =
+        Array.isArray(
+          aiResult.concerns
+        )
+          ? aiResult.concerns
+          : [];
+
+
+      // =========================================
+      // TEXT RESULTS
+      // =========================================
+
+      const experienceAnalysis =
+        aiResult.experienceAnalysis ||
+        "";
+
+
+      const educationAnalysis =
+        aiResult.educationAnalysis ||
+        "";
+
+
+      const justification =
+        aiResult.justification ||
+        "";
+
+
+      // =========================================
+      // RECOMMENDATION
+      // =========================================
+
+      let recommendation =
+        aiResult.recommendation ||
+        "Review";
+
+
+      const validRecommendations = [
+
+        "Strong Match",
+
+        "Good Match",
+
+        "Review",
+
+        "Low Match"
+
+      ];
+
+
+      if (
+        !validRecommendations.includes(
+          recommendation
+        )
+      ) {
+
+        if (
+          matchScore >= 81
+        ) {
+
+          recommendation =
+            "Strong Match";
+
+        }
+
+        else if (
+          matchScore >= 61
+        ) {
+
+          recommendation =
+            "Good Match";
+
+        }
+
+        else if (
+          matchScore >= 41
+        ) {
+
+          recommendation =
+            "Review";
+
+        }
+
+        else {
+
+          recommendation =
+            "Low Match";
+
+        }
 
       }
 
-      else if (matchScore >= 50) {
 
-        recommendation =
-          "Review";
-
-      }
-
-      else {
-
-        recommendation =
-          "Reject";
-
-      }
-
-
-      console.log("-----------------------------------");
-
-      console.log(
-        "Matched Skills:"
-      );
-
-      console.log(
-        matchedSkills
-      );
-
-
-      console.log(
-        "Missing Skills:"
-      );
-
-      console.log(
-        missingSkills
-      );
-
-
-      console.log(
-        "Match Score:",
-        matchScore + "%"
-      );
-
-
-      console.log(
-        "Recommendation:",
-        recommendation
-      );
-
-
-      // -----------------------------------------
-      // Save screening
-      // -----------------------------------------
-
-      console.log(
-        "Saving screening result..."
-      );
-
+      // =========================================
+      // SAVE SCREENING
+      // =========================================
 
       const screening =
         new Screening({
@@ -1131,6 +1508,21 @@ const missingSkills = jobSkills.filter(
           matchScore:
             matchScore,
 
+          experienceAnalysis:
+            experienceAnalysis,
+
+          educationAnalysis:
+            educationAnalysis,
+
+          strengths:
+            strengths,
+
+          concerns:
+            concerns,
+
+          justification:
+            justification,
+
           recommendation:
             recommendation
 
@@ -1142,7 +1534,7 @@ const missingSkills = jobSkills.filter(
 
 
       console.log(
-        "Screening result saved successfully!"
+        "AI screening saved successfully!"
       );
 
 
@@ -1152,9 +1544,9 @@ const missingSkills = jobSkills.filter(
       );
 
 
-      // -----------------------------------------
-      // Response
-      // -----------------------------------------
+      // =========================================
+      // RESPONSE
+      // =========================================
 
       res.status(200).json({
 
@@ -1173,14 +1565,29 @@ const missingSkills = jobSkills.filter(
         jobTitle:
           job.title,
 
+        matchScore:
+          matchScore,
+
         matchedSkills:
           matchedSkills,
 
         missingSkills:
           missingSkills,
 
-        matchScore:
-          matchScore,
+        experienceAnalysis:
+          experienceAnalysis,
+
+        educationAnalysis:
+          educationAnalysis,
+
+        strengths:
+          strengths,
+
+        concerns:
+          concerns,
+
+        justification:
+          justification,
 
         recommendation:
           recommendation
@@ -1192,16 +1599,18 @@ const missingSkills = jobSkills.filter(
     catch (error) {
 
       console.error(
-        "Matching error:"
+        "AI resume screening error:"
       );
 
-      console.error(error);
+      console.error(
+        error
+      );
 
 
       res.status(500).json({
 
         message:
-          "Error matching resume with job",
+          "Error during AI resume screening",
 
         error:
           error.message
@@ -1211,51 +1620,61 @@ const missingSkills = jobSkills.filter(
     }
 
   }
+
 );
 
 
 // =====================================================
-// GET USER'S SCREENING RESULTS
+// GET SCREENINGS
 // =====================================================
 
 app.get(
+
   "/api/screenings",
+
   authMiddleware,
 
   async (req, res) => {
 
     try {
 
-      // Get user's resumes
       const userResumes =
         await Resume.find({
 
           userId:
             req.user.userId
 
-        }).select("_id");
+        })
+
+        .select("_id");
 
 
       const resumeIds =
         userResumes.map(
+
           (resume) =>
             resume._id
+
         );
 
-
-      // Get screenings related to
-      // user's resumes
 
       const screenings =
         await Screening.find({
 
           resumeId: {
-            $in: resumeIds
+
+            $in:
+              resumeIds
+
           }
 
         })
+
         .sort({
-          createdAt: -1
+
+          createdAt:
+            -1
+
         });
 
 
@@ -1293,6 +1712,33 @@ app.get(
     }
 
   }
+
+);
+
+
+// =====================================================
+// ERROR HANDLER
+// =====================================================
+
+app.use(
+  (error, req, res, next) => {
+
+    console.error(
+      "Unhandled server error:"
+    );
+
+    console.error(error);
+
+
+    res.status(500).json({
+
+      message:
+        error.message ||
+        "Internal server error"
+
+    });
+
+  }
 );
 
 
@@ -1303,7 +1749,9 @@ app.get(
 const PORT = 5000;
 
 app.listen(
+
   PORT,
+
   () => {
 
     console.log(
@@ -1311,4 +1759,5 @@ app.listen(
     );
 
   }
+
 );
