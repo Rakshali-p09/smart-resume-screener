@@ -105,7 +105,8 @@ function Dashboard() {
         return;
       }
 
-      const screeningData = await screeningResponse.json();
+      const screeningData =
+        await screeningResponse.json();
 
       if (Array.isArray(screeningData)) {
         setScreenings(screeningData);
@@ -114,35 +115,47 @@ function Dashboard() {
         // SHORTLISTED
         // ==================================
 
-        const shortlisted = screeningData.filter(
-          (screening) =>
-            screening.recommendation === "Shortlist"
-        );
+        const shortlisted =
+          screeningData.filter(
+            (screening) =>
+              screening.recommendation === "Shortlist"
+          );
 
-        setShortlistedCount(shortlisted.length);
+        setShortlistedCount(
+          shortlisted.length
+        );
 
         // ==================================
         // AVERAGE MATCH
         // ==================================
 
         if (screeningData.length > 0) {
-          const totalScore = screeningData.reduce(
-            (total, screening) =>
-              total +
-              Number(screening.matchScore || 0),
-            0
-          );
+          const totalScore =
+            screeningData.reduce(
+              (total, screening) =>
+                total +
+                Number(
+                  screening.matchScore || 0
+                ),
+              0
+            );
 
           const average =
-            totalScore / screeningData.length;
+            totalScore /
+            screeningData.length;
 
-          setAverageMatch(Math.round(average));
+          setAverageMatch(
+            Math.round(average)
+          );
         } else {
           setAverageMatch(0);
         }
       }
     } catch (error) {
-      console.error("Dashboard error:", error);
+      console.error(
+        "Dashboard error:",
+        error
+      );
 
       setError(
         "Unable to load dashboard data."
@@ -156,7 +169,8 @@ function Dashboard() {
   // USER
   // ========================================
 
-  const userData = localStorage.getItem("user");
+  const userData =
+    localStorage.getItem("user");
 
   let user = null;
 
@@ -172,17 +186,20 @@ function Dashboard() {
   // EXTRA STATISTICS
   // ========================================
 
-  const totalScreenings = screenings.length;
+  const totalScreenings =
+    screenings.length;
 
-  const reviewCount = screenings.filter(
-    (screening) =>
-      screening.recommendation === "Review"
-  ).length;
+  const reviewCount =
+    screenings.filter(
+      (screening) =>
+        screening.recommendation === "Review"
+    ).length;
 
-  const rejectedCount = screenings.filter(
-    (screening) =>
-      screening.recommendation === "Reject"
-  ).length;
+  const rejectedCount =
+    screenings.filter(
+      (screening) =>
+        screening.recommendation === "Reject"
+    ).length;
 
   // ========================================
   // UI
@@ -197,6 +214,8 @@ function Dashboard() {
 
       <aside className="dashboard-sidebar">
 
+        {/* Brand */}
+
         <div className="sidebar-brand">
 
           <div className="brand-icon">
@@ -204,8 +223,13 @@ function Dashboard() {
           </div>
 
           <div>
-            <h2>Smart Resume</h2>
-            <span>Screener</span>
+            <h2>
+              Smart Resume
+            </h2>
+
+            <span>
+              Screener
+            </span>
           </div>
 
         </div>
@@ -215,8 +239,10 @@ function Dashboard() {
         <nav className="sidebar-nav">
 
           <p className="nav-label">
-            MAIN MENU
+            WORKSPACE
           </p>
+
+          {/* Dashboard */}
 
           <Link
             to="/dashboard"
@@ -226,6 +252,8 @@ function Dashboard() {
             Dashboard
           </Link>
 
+          {/* Resumes */}
+
           <Link
             to="/upload-resume"
             className="sidebar-link"
@@ -234,13 +262,17 @@ function Dashboard() {
             Resumes
           </Link>
 
+          {/* Jobs */}
+
           <Link
-            to="/create-job"
+            to="/jobs"
             className="sidebar-link"
           >
             <span>▣</span>
             Jobs
           </Link>
+
+          {/* Screening */}
 
           <Link
             to="/screen-resume"
@@ -251,8 +283,10 @@ function Dashboard() {
           </Link>
 
           <p className="nav-label">
-            MANAGEMENT
+            ANALYSIS
           </p>
+
+          {/* Candidates */}
 
           <Link
             to="/upload-resume"
@@ -261,6 +295,8 @@ function Dashboard() {
             <span>♙</span>
             Candidates
           </Link>
+
+          {/* Analytics */}
 
           <Link
             to="/screen-resume"
@@ -288,7 +324,7 @@ function Dashboard() {
               </strong>
 
               <p>
-                Manage your recruitment
+                 Explore the screening workspace
               </p>
             </div>
 
@@ -307,7 +343,7 @@ function Dashboard() {
       </aside>
 
       {/* ==================================
-          MAIN
+          MAIN CONTENT
       ================================== */}
 
       <main className="dashboard-main">
@@ -334,11 +370,13 @@ function Dashboard() {
             <div className="topbar-user">
 
               <div className="user-avatar">
+
                 {user?.name
                   ? user.name
                       .charAt(0)
                       .toUpperCase()
                   : "R"}
+
               </div>
 
               <div className="topbar-user-info">
@@ -348,7 +386,7 @@ function Dashboard() {
                 </strong>
 
                 <span>
-                  Recruiter
+                  Team Member
                 </span>
 
               </div>
@@ -360,29 +398,30 @@ function Dashboard() {
         </header>
 
         {/* =================================
-            CONTENT
+            DASHBOARD CONTENT
         ================================= */}
 
         <div className="dashboard-content">
 
-          {/* Welcome */}
+          {/* =================================
+              WELCOME SECTION
+          ================================= */}
 
           <section className="welcome-section">
 
             <div>
 
               <p className="welcome-label">
-                RECRUITER DASHBOARD
+                SMART RESUME SCREENING
               </p>
 
               <h1>
-                Welcome back,{" "}
-                {user?.name || "Recruiter"} 👋
+                Welcome back, {user?.name || "User"} 👋
               </h1>
 
               <p>
-                Here's what's happening with
-                your recruitment process today.
+                Manage resumes, jobs and AI-powered
+                candidate screening from one place.
               </p>
 
             </div>
@@ -410,7 +449,7 @@ function Dashboard() {
 
           <section className="advanced-stats">
 
-            {/* Resume */}
+            {/* Total Resumes */}
 
             <div className="advanced-stat-card">
 
@@ -442,7 +481,7 @@ function Dashboard() {
 
             </div>
 
-            {/* Jobs */}
+            {/* Total Jobs */}
 
             <div className="advanced-stat-card">
 
@@ -506,7 +545,7 @@ function Dashboard() {
 
             </div>
 
-            {/* Average */}
+            {/* Average Match */}
 
             <div className="advanced-stat-card">
 
@@ -565,6 +604,8 @@ function Dashboard() {
 
             <div className="action-grid">
 
+              {/* Create Job */}
+
               <Link
                 to="/create-job"
                 className="action-card"
@@ -593,6 +634,8 @@ function Dashboard() {
 
               </Link>
 
+              {/* Upload Resume */}
+
               <Link
                 to="/upload-resume"
                 className="action-card"
@@ -620,6 +663,8 @@ function Dashboard() {
                 </span>
 
               </Link>
+
+              {/* Screen Resume */}
 
               <Link
                 to="/screen-resume"
@@ -880,15 +925,19 @@ function Dashboard() {
               </div>
 
               {screenings.length > 0 && (
+
                 <Link
                   to="/screen-resume"
                   className="view-all-link"
                 >
                   Screen More →
                 </Link>
+
               )}
 
             </div>
+
+            {/* Loading */}
 
             {loading ? (
 
@@ -903,6 +952,8 @@ function Dashboard() {
               </div>
 
             ) : screenings.length === 0 ? (
+
+              /* No candidates */
 
               <div className="empty-state">
 
@@ -929,6 +980,8 @@ function Dashboard() {
               </div>
 
             ) : (
+
+              /* Candidate Table */
 
               <div className="candidate-table-wrapper">
 
@@ -1114,7 +1167,7 @@ function Dashboard() {
             </span>
 
             <span>
-              AI-powered recruitment platform
+              AI-powered resume screening platform
             </span>
 
           </footer>

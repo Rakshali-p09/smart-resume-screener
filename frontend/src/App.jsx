@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import CreateJob from "./pages/CreateJob";
+import Jobs from "./pages/Jobs";
 import UploadResume from "./pages/UploadResume";
 import ScreenResume from "./pages/ScreenResume";
 import CandidateDetails from "./pages/CandidateDetails";
@@ -30,7 +31,16 @@ function App() {
               </ProtectedRoute>
            }
         />
-
+        
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute>
+            <Jobs />
+            </ProtectedRoute>
+           }
+        />
+        
         <Route
           path="/create-job"
           element={
@@ -39,6 +49,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+       
         <Route
           path="/upload-resume"
           element={

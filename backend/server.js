@@ -926,137 +926,92 @@ app.post(
       // Normalize skills
       // -----------------------------------------
 
-      const normalizeSkill =
-        (skill) => {
+      const normalizeSkill = (skill) => {
 
-          const value =
-            skill
-              .toLowerCase()
-              .trim();
+  if (!skill) {
+    return "";
+  }
 
+  const value = skill
+    .toLowerCase()
+    .trim()
+    .replace(/[\s._-]/g, "");
 
-          const aliases = {
+  const aliases = {
 
-            "react.js":
-              "react",
+    "jav": "java",
+    "java": "java",
+    "javase": "java",
+    "corejava": "java",
 
-            "reactjs":
-              "react",
+    "spring": "spring",
+    "springboot": "springboot",
+    "springframework": "spring",
 
-            "node":
-              "node.js",
+    "react": "react",
+    "reactjs": "react",
 
-            "nodejs":
-              "node.js",
+    "node": "nodejs",
+    "nodejs": "nodejs",
 
-            "js":
-              "javascript",
+    "javascript": "javascript",
+    "js": "javascript",
 
-            "html5":
-              "html",
+    "typescript": "typescript",
+    "ts": "typescript",
 
-            "css3":
-              "css",
+    "html": "html",
+    "html5": "html",
 
-            "mongo":
-              "mongodb",
+    "css": "css",
+    "css3": "css",
 
-            "mongo db":
-              "mongodb",
+    "mongodb": "mongodb",
+    "mongo": "mongodb",
+    "mongodb": "mongodb",
 
-            "cpp":
-              "c++",
+    "git": "git",
+    "github": "github",
 
-            "rest":
-              "rest api",
+    "sql": "sql",
 
-            "restful api":
-              "rest api"
+    "rest": "restapi",
+    "restapi": "restapi",
+    "restfulapi": "restapi"
+  };
 
-          };
-
-
-          return (
-            aliases[value] ||
-            value
-          );
-
-        };
-
-
+  return aliases[value] || value;
+};
       // -----------------------------------------
       // Resume skills
       // -----------------------------------------
-
       const resumeSkills = [
-        ...new Set(
+  ...new Set(
+    resume.skills
+      .map(normalizeSkill)
+      .filter(Boolean)
+  )
+];
 
-          resume.skills.map(
-            normalizeSkill
-          )
-
-        )
-      ];
-
-
-      // -----------------------------------------
-      // Job skills
-      // -----------------------------------------
-
-      const jobSkills = [
-        ...new Set(
-
-          job.requiredSkills.map(
-            normalizeSkill
-          )
-
-        )
-      ];
+const jobSkills = [
+  ...new Set(
+    job.requiredSkills
+      .map(normalizeSkill)
+      .filter(Boolean)
+  )
+];
 
 
-      console.log(
-        "Resume Skills:"
-      );
-
-      console.log(
-        resumeSkills
-      );
+const matchedSkills = jobSkills.filter(
+  (jobSkill) =>
+    resumeSkills.includes(jobSkill)
+);
 
 
-      console.log(
-        "Job Skills:"
-      );
-
-      console.log(
-        jobSkills
-      );
-
-
-      // -----------------------------------------
-      // Matched skills
-      // -----------------------------------------
-
-      const matchedSkills =
-        jobSkills.filter(
-          (skill) =>
-            resumeSkills.includes(
-              skill
-            )
-        );
-
-
-      // -----------------------------------------
-      // Missing skills
-      // -----------------------------------------
-
-      const missingSkills =
-        jobSkills.filter(
-          (skill) =>
-            !resumeSkills.includes(
-              skill
-            )
-        );
-
+const missingSkills = jobSkills.filter(
+  (jobSkill) =>
+    !resumeSkills.includes(jobSkill)
+);
 
       // -----------------------------------------
       // Match score

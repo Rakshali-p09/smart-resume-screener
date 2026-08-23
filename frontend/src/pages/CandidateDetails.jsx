@@ -2,386 +2,488 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 function CandidateDetails() {
-
   const { id } = useParams();
 
-  const [screening, setScreening] =
-    useState(null);
-
-  const [resume, setResume] =
-    useState(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-
-  // ========================================
-  // FETCH CANDIDATE
-  // ========================================
+  const [screening, setScreening] = useState(null);
+  const [resume, setResume] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-
     fetchCandidateDetails();
-
   }, [id]);
 
+  const fetchCandidateDetails = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const fetchCandidateDetails =
-    async () => {
+      const token = localStorage.getItem("token");
 
-      try {
-
-        const token =
-          localStorage.getItem("token");
-
-
-        if (!token) {
-
-          window.location.href =
-            "/login";
-
-          return;
-
-        }
-
-
-        // ==================================
-        // GET SCREENINGS
-        // ==================================
-
-        const screeningResponse =
-          await fetch(
-            "http://localhost:5000/api/screenings",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`
-              }
-            }
-          );
-
-
-        if (
-          screeningResponse.status ===
-          401
-        ) {
-
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-
-          window.location.href =
-            "/login";
-
-          return;
-
-        }
-
-
-        const screenings =
-          await screeningResponse.json();
-
-
-        const selectedScreening =
-          screenings.find(
-            (item) =>
-              item._id === id
-          );
-
-
-        if (!selectedScreening) {
-
-          setError(
-            "Candidate not found."
-          );
-
-          return;
-
-        }
-
-
-        setScreening(
-          selectedScreening
-        );
-
-
-        // ==================================
-        // GET RESUMES
-        // ==================================
-
-        const resumeResponse =
-          await fetch(
-            "http://localhost:5000/api/resumes",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`
-              }
-            }
-          );
-
-
-        if (
-          resumeResponse.status ===
-          401
-        ) {
-
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-
-          window.location.href =
-            "/login";
-
-          return;
-
-        }
-
-
-        const resumes =
-          await resumeResponse.json();
-
-
-        const selectedResume =
-          resumes.find(
-            (item) =>
-              item._id ===
-              selectedScreening.resumeId
-          );
-
-
-        setResume(
-          selectedResume
-        );
-
+      if (!token) {
+        window.location.href = "/login";
+        return;
       }
 
-      catch (error) {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
 
-        console.error(
-          "Candidate details error:",
-          error
-        );
+      /* ========================================
+         GET SCREENING
+      ======================================== */
 
+      const screeningResponse = await fetch(
+        "http://localhost:5000/api/screenings",
+        {
+          headers,
+        }
+      );
+
+      if (screeningResponse.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
+      const screeningData = await screeningResponse.json();
+
+      if (!screeningResponse.ok) {
         setError(
-          "Unable to load candidate details."
+          screeningData.message ||
+            "Unable to load screening details."
+        );
+        return;
+      }
+
+      const selectedScreening = screeningData.find(
+        (item) => item._id === id
+      );
+
+      if (!selectedScreening) {
+        setError("Screening result not found.");
+        return;
+      }
+
+      setScreening(selectedScreening);
+
+      /* ========================================
+         GET RESUME
+      ======================================== */
+
+      const resumeResponse = await fetch(
+        "http://localhost:5000/api/resumes",
+        {
+          headers,
+        }
+      );
+
+      if (resumeResponse.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
+      const resumeData = await resumeResponse.json();
+
+      if (resumeResponse.ok && Array.isArray(resumeData)) {
+        const selectedResume = resumeData.find(
+          (item) =>
+            item._id === selectedScreening.resumeId
         );
 
+        setResume(selectedResume || null);
       }
+    } catch (err) {
+      console.error(
+        "Candidate details error:",
+        err
+      );
 
-      finally {
+      setError(
+        "Unable to load candidate details."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setLoading(false);
-
-      }
-
-    };
-
-
-  // ========================================
-  // LOADING
-  // ========================================
+  /* ========================================
+     LOADING
+  ======================================== */
 
   if (loading) {
-
     return (
-
       <div className="candidate-page">
+        <div className="candidate-loading">
+          <div className="candidate-spinner"></div>
 
-        <h2>
-          Loading candidate...
-        </h2>
+          <h2>
+            Loading screening report...
+          </h2>
 
+          <p>
+            Please wait while we prepare the
+            candidate details.
+          </p>
+        </div>
       </div>
-
     );
-
   }
 
-
-  // ========================================
-  // ERROR
-  // ========================================
+  /* ========================================
+     ERROR
+  ======================================== */
 
   if (error || !screening) {
-
     return (
-
       <div className="candidate-page">
+        <div className="candidate-error-card">
 
-        <h2>
-          {error ||
-            "Candidate not found."}
-        </h2>
+          <div className="candidate-error-icon">
+            !
+          </div>
 
+          <h2>
+            {error || "Candidate not found."}
+          </h2>
 
-        <Link to="/dashboard">
+          <p>
+            We couldn't load this screening
+            result.
+          </p>
 
-          <button>
-            Back to Dashboard
-          </button>
+          <Link
+            to="/dashboard"
+            className="candidate-primary-button"
+          >
+            ← Back to Dashboard
+          </Link>
 
-        </Link>
-
+        </div>
       </div>
-
     );
-
   }
 
+  const matchedSkills =
+    Array.isArray(screening.matchedSkills)
+      ? screening.matchedSkills
+      : [];
 
-  // ========================================
-  // PAGE
-  // ========================================
+  const missingSkills =
+    Array.isArray(screening.missingSkills)
+      ? screening.missingSkills
+      : [];
+
+  const matchScore = Number(
+    screening.matchScore || 0
+  );
+
+  const recommendation =
+    screening.recommendation ||
+    "Review";
+
+  const recommendationClass =
+    recommendation
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+  /* ========================================
+     PAGE
+  ======================================== */
 
   return (
-
     <div className="candidate-page">
-
 
       {/* ==================================
           HEADER
       ================================== */}
 
-      <div className="candidate-header">
+      <header className="candidate-header">
 
-        <Link to="/dashboard">
+        <Link
+          to="/dashboard"
+          className="candidate-back-link"
+        >
           ← Back to Dashboard
         </Link>
 
+        <div className="candidate-header-content">
 
-        <h1>
-          Candidate Details
-        </h1>
+          <div>
+            <span className="candidate-eyebrow">
+              SCREENING REPORT
+            </span>
 
+            <h1>
+              Candidate Details
+            </h1>
 
-        <p>
-          Detailed resume screening result
-        </p>
+            <p>
+              Detailed analysis of the resume
+              against the selected job requirements.
+            </p>
+          </div>
 
-      </div>
+          <div className="candidate-report-status">
+            <span className="status-dot"></span>
+            Analysis Complete
+          </div>
+
+        </div>
+
+      </header>
 
 
       {/* ==================================
-          CANDIDATE CARD
+          CANDIDATE SUMMARY
       ================================== */}
 
-      <div className="candidate-card">
+      <section className="candidate-summary-card">
 
-        <h2>
-          {screening.candidateName}
-        </h2>
+        <div className="candidate-avatar">
+          {(
+            screening.candidateName ||
+            "C"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
 
+        <div className="candidate-summary-info">
 
-        <p>
+          <span>
+            CANDIDATE
+          </span>
 
-          Applied for:
+          <h2>
+            {screening.candidateName ||
+              "Candidate"}
+          </h2>
 
-          {" "}
+          <p>
+            Evaluated for
+            {" "}
+            <strong>
+              {screening.jobTitle ||
+                "Selected Job"}
+            </strong>
+          </p>
+
+        </div>
+
+        <div className="candidate-summary-score">
+
+          <span>
+            MATCH SCORE
+          </span>
 
           <strong>
-            {screening.jobTitle}
+            {matchScore}%
           </strong>
 
-        </p>
+        </div>
 
-      </div>
+      </section>
 
 
       {/* ==================================
-          SCORE
+          MAIN GRID
       ================================== */}
 
-      <div className="score-card">
+      <section className="candidate-main-grid">
 
-        <h2>
-          Match Score
-        </h2>
+        {/* SCORE CARD */}
+
+        <div className="candidate-panel score-panel">
+
+          <div className="panel-heading">
+
+            <div>
+              <span>
+                OVERVIEW
+              </span>
+
+              <h2>
+                Match Analysis
+              </h2>
+            </div>
+
+            <div className="score-mini-icon">
+              %
+            </div>
+
+          </div>
 
 
-        <div className="score-number">
+          <div className="large-score">
 
-          {screening.matchScore}%
+            <div
+              className="score-ring"
+              style={{
+                "--score":
+                  `${matchScore * 3.6}deg`,
+              }}
+            >
+              <div className="score-ring-inner">
+                <strong>
+                  {matchScore}%
+                </strong>
+
+                <span>
+                  Match
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div className="score-progress">
+
+            <div className="score-progress-label">
+
+              <span>
+                Compatibility
+              </span>
+
+              <strong>
+                {matchScore}%
+              </strong>
+
+            </div>
+
+            <div className="score-progress-track">
+
+              <div
+                className="score-progress-fill"
+                style={{
+                  width:
+                    `${Math.min(
+                      Math.max(
+                        matchScore,
+                        0
+                      ),
+                      100
+                    )}%`,
+                }}
+              />
+
+            </div>
+
+          </div>
 
         </div>
 
 
-        <div className="progress-container">
+        {/* RECOMMENDATION */}
+
+        <div className="candidate-panel recommendation-panel">
+
+          <div className="panel-heading">
+
+            <div>
+              <span>
+                SCREENING DECISION
+              </span>
+
+              <h2>
+                Recommendation
+              </h2>
+            </div>
+
+          </div>
+
 
           <div
-            className="progress-bar"
-            style={{
-              width:
-                `${screening.matchScore}%`
-            }}
-          />
+            className={`recommendation-result ${recommendationClass}`}
+          >
+
+            <div className="recommendation-icon">
+              ✓
+            </div>
+
+            <div>
+
+              <strong>
+                {recommendation}
+              </strong>
+
+              <p>
+                Based on the current resume
+                and job requirements.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="recommendation-note">
+
+            <span>
+              AI Screening Insight
+            </span>
+
+            <p>
+              The recommendation is generated
+              from the candidate's skill match
+              against the selected job.
+            </p>
+
+          </div>
 
         </div>
 
-      </div>
-
-
-      {/* ==================================
-          RECOMMENDATION
-      ================================== */}
-
-      <div className="recommendation-card">
-
-        <h2>
-          Recommendation
-        </h2>
-
-
-        <div
-          className={
-            `recommendation ${
-              screening.recommendation
-                .toLowerCase()
-            }`
-          }
-        >
-
-          {screening.recommendation}
-
-        </div>
-
-      </div>
+      </section>
 
 
       {/* ==================================
           SKILLS
       ================================== */}
 
-      <div className="skills-container">
+      <section className="candidate-skills-grid">
+
+        {/* MATCHED SKILLS */}
+
+        <div className="candidate-panel skills-panel">
+
+          <div className="skills-panel-header">
+
+            <div>
+
+              <span className="matched-label">
+                MATCHED
+              </span>
+
+              <h2>
+                Matched Skills
+              </h2>
+
+            </div>
+
+            <div className="skill-count matched-count">
+              {matchedSkills.length}
+            </div>
+
+          </div>
 
 
-        {/* MATCHED */}
+          {matchedSkills.length > 0 ? (
 
-        <div className="skills-card">
+            <div className="candidate-skill-list">
 
-          <h2>
-            Matched Skills
-          </h2>
-
-
-          {screening.matchedSkills.length >
-          0 ? (
-
-            <div className="skill-list">
-
-              {screening.matchedSkills.map(
+              {matchedSkills.map(
                 (skill, index) => (
-
                   <span
-                    className="matched-skill"
+                    className="candidate-skill matched"
                     key={index}
                   >
-
-                    ✓ {skill}
-
+                    <span>✓</span>
+                    {skill}
                   </span>
-
                 )
               )}
 
@@ -389,41 +491,53 @@ function CandidateDetails() {
 
           ) : (
 
-            <p>
-              No matched skills.
-            </p>
+            <div className="no-skills-state">
+              No matched skills found.
+            </div>
 
           )}
 
         </div>
 
 
-        {/* MISSING */}
+        {/* MISSING SKILLS */}
 
-        <div className="skills-card">
+        <div className="candidate-panel skills-panel">
 
-          <h2>
-            Missing Skills
-          </h2>
+          <div className="skills-panel-header">
+
+            <div>
+
+              <span className="missing-label">
+                GAP ANALYSIS
+              </span>
+
+              <h2>
+                Missing Skills
+              </h2>
+
+            </div>
+
+            <div className="skill-count missing-count">
+              {missingSkills.length}
+            </div>
+
+          </div>
 
 
-          {screening.missingSkills.length >
-          0 ? (
+          {missingSkills.length > 0 ? (
 
-            <div className="skill-list">
+            <div className="candidate-skill-list">
 
-              {screening.missingSkills.map(
+              {missingSkills.map(
                 (skill, index) => (
-
                   <span
-                    className="missing-skill"
+                    className="candidate-skill missing"
                     key={index}
                   >
-
-                    ✗ {skill}
-
+                    <span>+</span>
+                    {skill}
                   </span>
-
                 )
               )}
 
@@ -431,61 +545,157 @@ function CandidateDetails() {
 
           ) : (
 
-            <p>
-              No missing skills.
-            </p>
+            <div className="no-skills-state success">
+              ✓ No major skill gaps detected.
+            </div>
 
           )}
 
         </div>
 
-      </div>
+      </section>
 
 
       {/* ==================================
-          RESUME TEXT
+          RESUME INFORMATION
       ================================== */}
 
       {resume && (
 
-        <div className="resume-card">
+        <section className="candidate-panel resume-details-panel">
 
-          <h2>
-            Extracted Resume
-          </h2>
+          <div className="panel-heading">
 
+            <div>
 
-          <div className="resume-text">
+              <span>
+                RESUME
+              </span>
 
-            {resume.extractedText}
+              <h2>
+                Resume Information
+              </h2>
+
+            </div>
 
           </div>
 
-        </div>
+
+          <div className="resume-file-info">
+
+            <div className="resume-file-icon">
+              PDF
+            </div>
+
+            <div>
+
+              <strong>
+                {resume.originalName ||
+                  "Resume.pdf"}
+              </strong>
+
+              <span>
+                Uploaded resume
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {resume.skills &&
+            resume.skills.length > 0 && (
+
+              <div className="resume-detected-skills">
+
+                <span>
+                  DETECTED SKILLS
+                </span>
+
+                <div>
+
+                  {resume.skills.map(
+                    (skill, index) => (
+
+                      <span
+                        key={index}
+                        className="detected-skill"
+                      >
+                        {skill}
+                      </span>
+
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+        </section>
 
       )}
 
 
       {/* ==================================
-          BACK
+          EXTRACTED TEXT
       ================================== */}
 
-      <div className="back-button">
+      {resume?.extractedText && (
 
-        <Link to="/dashboard">
+        <section className="candidate-panel extracted-text-panel">
 
-          <button>
-            Back to Dashboard
-          </button>
+          <div className="panel-heading">
 
+            <div>
+
+              <span>
+                DOCUMENT ANALYSIS
+              </span>
+
+              <h2>
+                Extracted Resume Content
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div className="extracted-text-box">
+            {resume.extractedText}
+          </div>
+
+        </section>
+
+      )}
+
+
+      {/* ==================================
+          FOOTER ACTION
+      ================================== */}
+
+      <div className="candidate-footer">
+
+        <Link
+          to="/screen-resume"
+          className="candidate-secondary-button"
+        >
+          ← Screen Another Resume
+        </Link>
+
+        <Link
+          to="/dashboard"
+          className="candidate-primary-button"
+        >
+          Back to Dashboard
         </Link>
 
       </div>
 
     </div>
-
   );
-
 }
 
 export default CandidateDetails;
