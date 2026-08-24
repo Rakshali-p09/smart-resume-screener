@@ -905,3 +905,11 @@ The system currently supports:
 - Candidate recommendation
 - MongoDB storage
 - Candidate screening dashboard
+
+---
+
+# 🎥 Demo Video
+
+A 2–3 minute demonstration of the Smart Resume Screener:
+
+[Watch the Demo Video](https://youtu.be/Z6HHeBCV6ns?si=lSeT4etuYStNaEoM)
