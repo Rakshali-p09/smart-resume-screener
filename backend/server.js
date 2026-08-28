@@ -59,24 +59,17 @@ app.use(express.json());
 // =====================================================
 // MONGODB CONNECTION
 // =====================================================
-mongoose.connect(process.env.MONGODB_URI);
+// =====================================================
+// MONGODB CONNECTION
+// =====================================================
 
+mongoose
+  .connect(process.env.MONGODB_URI)
   .then(() => {
-
-    console.log(
-      "MongoDB connected successfully"
-    );
-
+    console.log("MongoDB connected successfully");
   })
-
   .catch((error) => {
-
-    console.error(
-      "MongoDB connection error:"
-    );
-
-    console.error(error);
-
+    console.error("MongoDB connection error:", error);
   });
 
 
