@@ -46,7 +46,7 @@ function ScreenResume() {
       }
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/resumes",
+        `${import.meta.env.VITE_API_URL}/api/resumes`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -94,7 +94,7 @@ function ScreenResume() {
       }
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/jobs",
+        `${import.meta.env.VITE_API_URL}/api/jobs`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -157,7 +157,7 @@ function ScreenResume() {
       }
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/match",
+        `${import.meta.env.VITE_API_URL}/api/match`,
         {
           method: "POST",
 

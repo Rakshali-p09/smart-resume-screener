@@ -39,7 +39,7 @@ function UploadResume() {
       setMessage("");
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/resumes/upload",
+        `${import.meta.env.VITE_API_URL}/api/resumes/upload`,
         {
           method: "POST",
 

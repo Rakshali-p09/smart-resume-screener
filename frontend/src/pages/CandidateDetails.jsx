@@ -34,7 +34,7 @@ function CandidateDetails() {
       ======================================== */
 
       const screeningResponse = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/screenings",
+        `${import.meta.env.VITE_API_URL}/api/screenings`,
         {
           headers,
         }
@@ -73,7 +73,7 @@ function CandidateDetails() {
       ======================================== */
 
       const resumeResponse = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/resumes",
+        `${import.meta.env.VITE_API_URL}/api/resumes`,
         {
           headers,
         }

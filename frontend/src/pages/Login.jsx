@@ -38,7 +38,7 @@ function Login() {
 
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/auth/login",
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
         {
           method: "POST",
 

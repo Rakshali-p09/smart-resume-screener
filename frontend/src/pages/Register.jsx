@@ -56,7 +56,7 @@ function Register() {
       // ---------------------------------------
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/auth/register",
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
         {
           method: "POST",
 

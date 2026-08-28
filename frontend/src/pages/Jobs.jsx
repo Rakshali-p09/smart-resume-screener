@@ -24,7 +24,7 @@ function Jobs() {
       }
 
       const response = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/jobs",
+        `${import.meta.env.VITE_API_URL}/api/jobs`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

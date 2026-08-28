@@ -44,7 +44,7 @@ function Dashboard() {
       // ====================================
 
       const resumeResponse = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/resumes",
+        `${import.meta.env.VITE_API_URL}/api/resumes`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ function Dashboard() {
       // ====================================
 
       const jobResponse = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/jobs",
+        `${import.meta.env.VITE_API_URL}/api/jobs`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ function Dashboard() {
       // ====================================
 
       const screeningResponse = await fetch(
-        "https://smart-resume-screener-6r0u.onrender.com/api/screenings",
+        `${import.meta.env.VITE_API_URL}/api/screenings`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
