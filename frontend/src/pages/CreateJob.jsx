@@ -56,7 +56,7 @@ function CreateJob() {
 
 
       const response = await fetch(
-        "http://localhost:5000/api/jobs",
+        "https://smart-resume-screener-6r0u.onrender.com/api/jobs",
         {
           method: "POST",
 

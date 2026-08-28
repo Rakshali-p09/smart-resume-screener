@@ -39,7 +39,7 @@ function UploadResume() {
       setMessage("");
 
       const response = await fetch(
-        "http://localhost:5000/api/resumes/upload",
+        "https://smart-resume-screener-6r0u.onrender.com/api/resumes/upload",
         {
           method: "POST",
 

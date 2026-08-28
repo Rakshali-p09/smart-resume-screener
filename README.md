@@ -724,7 +724,7 @@ node server.js
 Backend:
 
 ```text
-http://localhost:5000
+https://smart-resume-screener-6r0u.onrender.com
 ```
 
 ---

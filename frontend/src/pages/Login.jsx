@@ -38,7 +38,7 @@ function Login() {
 
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        "https://smart-resume-screener-6r0u.onrender.com/api/auth/login",
         {
           method: "POST",
 

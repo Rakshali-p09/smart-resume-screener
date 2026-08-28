@@ -34,7 +34,7 @@ function CandidateDetails() {
       ======================================== */
 
       const screeningResponse = await fetch(
-        "http://localhost:5000/api/screenings",
+        "https://smart-resume-screener-6r0u.onrender.com/api/screenings",
         {
           headers,
         }
@@ -73,7 +73,7 @@ function CandidateDetails() {
       ======================================== */
 
       const resumeResponse = await fetch(
-        "http://localhost:5000/api/resumes",
+        "https://smart-resume-screener-6r0u.onrender.com/api/resumes",
         {
           headers,
         }
