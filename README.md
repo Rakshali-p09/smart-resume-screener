@@ -4,6 +4,10 @@ An AI-powered resume screening web application that analyzes candidate resumes a
 
 ---
 
+## 🚀 Live Demo
+
+[🔗 Live Demo](https://smart-resume-screener-alpha.vercel.app)
+
 ## 🎯 Objective
 
 The objective of Smart Resume Screener is to intelligently parse resumes and compare candidate profiles with job descriptions.
