@@ -59,9 +59,7 @@ app.use(express.json());
 // =====================================================
 // MONGODB CONNECTION
 // =====================================================
-
-mongoose
-  .connect("mongodb://localhost:27017/smartResumeDB")
+mongoose.connect(process.env.MONGODB_URI);
 
   .then(() => {
 

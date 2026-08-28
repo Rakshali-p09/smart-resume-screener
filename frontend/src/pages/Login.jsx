@@ -93,20 +93,13 @@ function Login() {
         "Login error:",
         error
       );
-
       setError(
         "Cannot connect to backend."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
-
   return (
 
     <div className="login-page">
@@ -121,9 +114,7 @@ function Login() {
           Login to Smart Resume Screener
         </p>
 
-
         <form onSubmit={handleLogin}>
-
 
           {/* Email */}
 
